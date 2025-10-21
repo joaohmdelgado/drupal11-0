@@ -1,0 +1,22 @@
+# ----------------------------------------------------------------------
+# Arquivos e Diretórios a IGNORAR
+# (Isso garante que apenas composer.json e composer.lock sejam versionados)
+# ----------------------------------------------------------------------
+
+# Ignora o diretório de dependências
+/vendor/
+
+# Ignora o diretório principal do Drupal e dos arquivos de ambiente
+/web/
+
+# Ignora logs, cache e arquivos de sistema
+*.log
+*.tmp
+.DS_Store
+.vscode/
+.idea/
+.ddev/ # (Se estiver usando DDEV)
+
+# Exceção (não será necessário pois 'web' já está ignorado,
+# mas é bom para um gitignore padrão de PHP/Composer)
+composer.phar
