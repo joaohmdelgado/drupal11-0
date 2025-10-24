@@ -1,14 +1,17 @@
 #
 # --- ETAPA 1: BUILDER (Cria o projeto e instala dependências) ---
-# Usamos uma imagem cli para ter o ambiente PHP e o Composer de forma eficiente.
+# Usamos uma imagem cli para ter o ambiente PHP limpo para o Composer.
 FROM php:8.2-cli AS builder
+
+# O Composer precisa estar disponível para o comando 'composer install'.
+COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
 # Instala ferramentas necessárias para Composer/git, etc.
 RUN apt-get update && \
     apt-get install -y git unzip zip --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-# Configura o diretório de trabalho do projeto (Usaremos /usr/src/drupal como ponto de montagem de código)
+# Configura o diretório de trabalho do projeto (Raiz do Composer)
 WORKDIR /usr/src/drupal
 
 # Copia os arquivos de definição de dependência
@@ -17,17 +20,18 @@ COPY composer.json composer.lock ./
 # Instala todas as dependências do Composer.
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-progress
 
-# Copia o restante do código-fonte (este deve ser o diretório raiz do seu projeto)
+# Copia o restante do código-fonte
 COPY . .
 
-# --- ETAPA 2: PRODUÇÃO (Cria a imagem final leve) ---
+# --- ETAPA 2: PRODUÇÃO (Cria a imagem final leve e pronta para rodar) ---
 # Imagem oficial do Drupal que usa /opt/drupal/web como DOCUMENT ROOT
 FROM drupal:10-apache
 
-# O WORKDIR padrão é /opt/drupal/web, mas vamos usar a convenção da imagem base para onde o código deve ser copiado: /usr/src/drupal.
+# O WORKDIR padrão é /opt/drupal/web, mas as convenções da imagem base
+# colocam o código-fonte COMPLETO em /usr/src/drupal.
 
 # ----------------------------------------------------
-# 1. Instala utilidades essenciais (para MariaDB e debugging)
+# 1. Instala utilidades essenciais
 # ----------------------------------------------------
 RUN apt-get update && apt-get install -y \
     mariadb-client \
@@ -49,16 +53,13 @@ RUN sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf \
 # 3. Copia CÓDIGO e DRUSH da etapa builder
 # ----------------------------------------------------
 
-# Copia todo o código-fonte COMPLETO e o diretório vendor da etapa builder
-# O destino /usr/src/drupal/ é onde a imagem base espera encontrar o código-fonte COMPLETO do projeto.
+# Copia todo o código-fonte COMPLETO e o diretório vendor (criado na etapa builder)
 COPY --from=builder /usr/src/drupal /usr/src/drupal
 
-# Define o WORKDIR para a raiz da web, onde o Drush espera ser executado
+# Define o WORKDIR para a raiz da web do Drupal (Document Root)
 WORKDIR /opt/drupal/web
 
-# Instala o Drush globalmente (A imagem base já tem Composer disponível globalmente)
-# Usaremos um WORKDIR temporário para que o link simbólico funcione corretamente
-# E instalamos o drush no diretório global
+# Instala o Drush globalmente na imagem final
 RUN composer global require drush/drush \
     && ln -s /root/.composer/vendor/bin/drush /usr/local/bin/drush
 
@@ -66,7 +67,7 @@ RUN composer global require drush/drush \
 # 4. Ajusta Permissões e Diretórios
 # ----------------------------------------------------
 
-# O código é uma cópia de referência. Aqui garantimos as permissões dentro da raiz web
+# Cria os diretórios de arquivos e ajusta as permissões de usuário (www-data)
 RUN mkdir -p sites/default/files sites/default/private \
     && chown -R www-data:www-data sites/default \
     && chown -R www-data:www-data /usr/src/drupal \
