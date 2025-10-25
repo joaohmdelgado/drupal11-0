@@ -9,7 +9,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 # Instala ferramentas necessárias para Composer/git, etc.
 RUN apt-get update && \
     apt-get install -y git unzip zip libpng-dev libjpeg-dev libwebp-dev --no-install-recommends && \
+    docker-php-ext-install gd && \
     rm -rf /var/lib/apt/lists/*
+    
 
 # Configura o diretório de trabalho do projeto (Raiz do Composer)
 WORKDIR /usr/src/drupal
