@@ -61,17 +61,13 @@ COPY --from=builder /usr/src/drupal /usr/src/drupal
 # Define o WORKDIR para a raiz da web do Drupal (Document Root)
 WORKDIR /opt/drupal/web
 
-# Instala o Drush globalmente na imagem final
-RUN composer global require drush/drush \
-    && ln -s /root/.composer/vendor/bin/drush /usr/local/bin/drush
-
 # ----------------------------------------------------
 # 4. Ajusta Permissões e Diretórios
 # ----------------------------------------------------
 
 # Cria os diretórios de arquivos e ajusta as permissões de usuário (www-data)
-RUN mkdir -p sites/default/files sites/default/private \
-    && chown -R www-data:www-data sites/default \
+RUN mkdir -p /opt/drupal/web/sites/default/files /opt/drupal/web/sites/default/private \
+    && chown -R www-data:www-data /opt/drupal/web/sites/default \
     && chown -R www-data:www-data /usr/src/drupal \
     && find /usr/src/drupal -type d -exec chmod 755 {} \; \
     && find /usr/src/drupal -type f -exec chmod 644 {} \;
