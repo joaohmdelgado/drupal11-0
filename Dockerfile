@@ -56,21 +56,28 @@ RUN sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf \
 # ----------------------------------------------------
 
 # Copia todo o código-fonte COMPLETO e o diretório vendor (criado na etapa builder)
-COPY --from=builder /usr/src/drupal /usr/src/drupal
+COPY --from=builder --chown=www-data:www-data /usr/src/drupal /opt/drupal
 
 # Define o WORKDIR para a raiz da web do Drupal (Document Root)
-WORKDIR /opt/drupal/web
+WORKDIR /opt/drupal
+
+# Adiciona o diretório de binários do Composer (.vendor/bin) ao PATH
+ENV PATH="/opt/drupal/vendor/bin:${PATH}"
+
 
 # ----------------------------------------------------
 # 4. Ajusta Permissões e Diretórios
 # ----------------------------------------------------
 
-# Cria os diretórios de arquivos e ajusta as permissões de usuário (www-data)
-RUN mkdir -p /opt/drupal/web/sites/default/files /opt/drupal/web/sites/default/private \
-    && chown -R www-data:www-data /opt/drupal/web/sites/default \
-    && chown -R www-data:www-data /usr/src/drupal \
-    && find /usr/src/drupal -type d -exec chmod 755 {} \; \
-    && find /usr/src/drupal -type f -exec chmod 644 {} \;
+
+# Cria e ajusta permissões das pastas de arquivos (elas estão em web/sites/...)
+RUN mkdir -p web/sites/default/files web/sites/default/private \
+    && chown -R www-data:www-data web/sites/default/files web/sites/default/private \
+    && find web -type d -exec chmod 755 {} \; \
+    && find web -type f -exec chmod 644 {} \;
+
+# Define o usuário www-data para rodar comandos futuros (como o Drush interativo)
+USER www-data
 
 EXPOSE 80
 
