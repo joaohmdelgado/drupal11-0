@@ -29,8 +29,6 @@ COPY . .
 # Imagem oficial do Drupal que usa /opt/drupal/web como DOCUMENT ROOT
 FROM drupal:10-apache
 
-COPY php.ini /usr/local/etc/php/conf.d/zzz-custom.ini
-
 # O WORKDIR padrão é /opt/drupal/web, mas as convenções da imagem base
 # colocam o código-fonte COMPLETO em /usr/src/drupal.
 
@@ -71,12 +69,13 @@ ENV PATH="/opt/drupal/vendor/bin:${PATH}"
 # 4. Ajusta Permissões e Diretórios
 # ----------------------------------------------------
 
-
 # Cria e ajusta permissões das pastas de arquivos (elas estão em web/sites/...)
 RUN mkdir -p web/sites/default/files web/sites/default/private \
     && chown -R www-data:www-data web/sites/default/files web/sites/default/private \
     && find web -type d -exec chmod 755 {} \; \
     && find web -type f -exec chmod 644 {} \;
+    
+COPY php.ini /usr/local/etc/php/conf.d/zzz-custom.ini
 
 EXPOSE 80
 
