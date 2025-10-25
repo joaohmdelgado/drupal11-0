@@ -29,6 +29,8 @@ COPY . .
 # Imagem oficial do Drupal que usa /opt/drupal/web como DOCUMENT ROOT
 FROM drupal:10-apache
 
+COPY php.ini /usr/local/etc/php/conf.d/zzz-custom.ini
+
 # O WORKDIR padrão é /opt/drupal/web, mas as convenções da imagem base
 # colocam o código-fonte COMPLETO em /usr/src/drupal.
 
