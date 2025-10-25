@@ -76,9 +76,6 @@ RUN mkdir -p web/sites/default/files web/sites/default/private \
     && find web -type d -exec chmod 755 {} \; \
     && find web -type f -exec chmod 644 {} \;
 
-# Define o usuário www-data para rodar comandos futuros (como o Drush interativo)
-USER www-data
-
 EXPOSE 80
 
 # Comando padrão da imagem base do Drupal
